@@ -74,8 +74,8 @@
 ### Sunnyside World Asset Pack v2.1 (danieldiggle) — 6,855 files, 49MB (biggest file count)
 - **Contents:** farm-sim goldmine: Humans/Goblins/Skeletons with 7 animated hairstyles × 16 actions (idle/walk/run/roll/jump/hurt/death/carry/attack/swim/chop/mine/build/fish), 16x16 tileset (buildings/interiors/land/nature), 11 crops × 5 growth stages, animals, plants, VFX, 9-slice UI, + **full GameMaker project** (rooms + 488 .yy sprites).
 - **Style:** bright cute pixel (Forager/Atomicrops-like), L/R movement only.
-- **License:** **no license statement found on the itch page — MUST verify before any shipping** (danieldiggle name-your-price pack). This is the single biggest "verify me" item because the contents are the most BB-adjacent (farm/crops/animals) in the vault.
-- **Fit:** a farm idle game could be ~70% art-complete from this pack alone — if license clears.
+- **License (page verified, LICENCE V1):** free + commercial projects, modify OK, **credit not required** (appreciated); redistribution OK in tutorials with a link to the page; no NFT, no AI training, no repackage/resell.
+- **Fit: CLEARED FOR COMMERCIAL** — a farm idle game could be ~70% art-complete from this pack alone. The strongest game-#2 candidate in the vault.
 
 ### Sprout Lands — Basic Pack (Cup Nooble) — 43 files, 1MB — ❌ NON-COMMERCIAL
 - **License (read_me.txt, full read): free pack = non-commercial projects only** (credit required; commercial license sold separately). NO AI training, no NFT.

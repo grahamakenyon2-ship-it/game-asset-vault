@@ -1,6 +1,6 @@
 # Asset License Ledger
 
-Legend: ✅ commercial-clear · ⚠️ verify before shipping · ❌ non-commercial (prototype only)
+Legend: ✅ commercial-clear · ⚠️ verify before shipping · ✅ commercial-clear (updated Oct 30 evening)
 
 | Pack name | Creator / Source | License | Attribution | Commercial verdict | Notes |
 |---|---|---|---|---|---|
@@ -13,7 +13,7 @@ Legend: ✅ commercial-clear · ⚠️ verify before shipping · ❌ non-commerc
 | Pixel UI pack 3 | unknown (likely CraftPix) | unknown | — | ⚠️ needs itch URL | 9 bright pixel UI sheets |
 | Basic_GUI_Bundle | unknown | unknown | — | ⚠️ needs itch URL | flat vector GUI, PNG+SVG+AI |
 | Prinbles — Robin v1.1 | Prinbles — prinbles.itch.io | CC0 (per their free collection; confirm on Robin page) | none | ⚠️ confirm CC0 label | fonts used: Changa One, Bungee |
-| Sunnyside World v2.1 | danieldiggle — danieldiggle.itch.io/sunnyside | **no license statement found** | — | ⚠️ **MUST verify** | 6,855 files incl. GameMaker project |
+| Sunnyside World v2.1 | danieldiggle — danieldiggle.itch.io/sunnyside | NEW LICENCE V1 (page verified): free + commercial, modify OK, credit not required; no NFT, no AI training | not required, appreciated | ✅ **CLEARED** | 6,855 files incl. GameMaker project; redistribute OK in tutorials w/ link |
 | Sprout Lands — Basic Pack | Cup Nooble (read_me.txt in pack) | **non-commercial free** | required | ❌ prototype only | commercial license sold separately |
 | Tiny Wonder Farm Free | Butter Milk (page verified) | **free = non-commercial** | — | ❌ prototype only | premium version = commercial |
 | items (Items pack x16, 1244 icons) | Glionox — glionox.itch.io/items16 | **no license section on page** | — | ⚠️ verify | 16x16 item icons |
