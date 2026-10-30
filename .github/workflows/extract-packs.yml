@@ -1,0 +1,56 @@
+name: Extract asset packs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packs/**'
+      - 'Free Platform Game Assets.zip'
+  workflow_dispatch:
+
+concurrency:
+  group: extract-packs
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install extractors (zip + rar)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full p7zip-rar libarchive-tools
+
+      - name: Extract all archives into extracted/
+        run: |
+          mkdir -p extracted
+          shopt -s nullglob
+          for f in packs/*.zip packs/*.rar "Free Platform Game Assets.zip"; do
+            [ -e "$f" ] || continue
+            name=$(basename "$f"); name="${name%.*}"
+            mkdir -p "extracted/$name"
+            echo "::group::Extracting $f"
+            7z x -y -o"extracted/$name" "$f" >/dev/null || bsdtar -xf "$f" -C "extracted/$name"
+            echo "::endgroup::"
+          done
+
+      - name: Remove OS junk
+        run: |
+          find extracted -type d -name __MACOSX -prune -exec rm -rf {} +
+          find extracted -name .DS_Store -delete
+          find extracted -name Thumbs.db -delete
+
+      - name: Commit extracted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add extracted
+          if git diff --cached --quiet; then
+            echo "Nothing new to extract."
+            exit 0
+          fi
+          git commit -m "auto: extract asset packs into extracted/ [skip ci]"
+          git push
