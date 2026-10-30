@@ -1,14 +1,19 @@
 name: Extract Asset Packs
 
-# Manual trigger only (Actions tab → "Extract Asset Packs" → Run workflow).
-# workflow_dispatch on purpose: a push trigger would re-run on the bot's own
-# commit and loop forever.
+# workflow_dispatch = manual button. The push triggers are safe from loops:
+# the bot's own commits only touch extracted/ (and never re-fire), and the
+# packs/ trigger self-terminates (next run finds nothing new and exits 0).
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'packs/**'
+      - '.github/workflows/extract-packs.yml'
 
 concurrency:
   group: extract-packs
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -20,8 +25,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install extractors (handles .zip AND .rar)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full p7zip-rar
+      # NOTE: p7zip-rar was REMOVED in Ubuntu 24.04 (current ubuntu-latest).
+      # RAR (incl. RAR5) is handled by bsdtar (libarchive) with unar fallback.
+      - name: Install extractors
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full libarchive-tools unar
 
       - name: Tidy stray archives into packs/
         run: |
@@ -35,8 +42,17 @@ jobs:
           for a in packs/*.zip packs/*.rar; do
             name=$(basename "$a"); name="${name%.*}"
             mkdir -p "extracted/$name"
-            7z x -y -o"extracted/$name" "$a" > /dev/null
-            echo "extracted: $name"
+            echo "::group::Extracting $name"
+            case "$a" in
+              *.zip)
+                7z x -y -o"extracted/$name" "$a" > /dev/null \
+                  || bsdtar -xf "$a" -C "extracted/$name" ;;
+              *.rar)
+                bsdtar -xf "$a" -C "extracted/$name" \
+                  || unar -q -f -D -o "extracted/$name" "$a" ;;
+            esac
+            echo "OK: $name"
+            echo "::endgroup::"
           done
 
       - name: Strip OS junk

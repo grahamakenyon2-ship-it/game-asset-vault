@@ -29,7 +29,7 @@ files live in `extracted/<pack-name>/`, produced by the **Extract Asset Packs**
 workflow:
 
 - Repo **Actions** tab → *Extract Asset Packs* → **Run workflow**
-- It installs 7-Zip (handles `.zip` **and** `.rar`), moves any stray
+- It installs 7-Zip for zips and bsdtar/unar for rars (handles `.zip` **and** `.rar`), moves any stray
   archive at repo root into `packs/`, extracts every archive into
   `extracted/<pack-name>/`, strips `__MACOSX`/`.DS_Store` junk, and commits
   the result back to main.
