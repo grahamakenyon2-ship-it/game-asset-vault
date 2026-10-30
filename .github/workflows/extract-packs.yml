@@ -1,11 +1,9 @@
-name: Extract asset packs
+name: Extract Asset Packs
 
+# Manual trigger only (Actions tab → "Extract Asset Packs" → Run workflow).
+# workflow_dispatch on purpose: a push trigger would re-run on the bot's own
+# commit and loop forever.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'packs/**'
-      - 'Free Platform Game Assets.zip'
   workflow_dispatch:
 
 concurrency:
@@ -19,38 +17,41 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install extractors (zip + rar)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full p7zip-rar libarchive-tools
+      - name: Install extractors (handles .zip AND .rar)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full p7zip-rar
 
-      - name: Extract all archives into extracted/
+      - name: Tidy stray archives into packs/
+        run: |
+          find . -maxdepth 1 -type f \( -name '*.zip' -o -name '*.rar' \) \
+            -exec mv {} packs/ \; || true
+
+      - name: Extract every pack into extracted/<pack-name>/
         run: |
           mkdir -p extracted
           shopt -s nullglob
-          for f in packs/*.zip packs/*.rar "Free Platform Game Assets.zip"; do
-            [ -e "$f" ] || continue
-            name=$(basename "$f"); name="${name%.*}"
+          for a in packs/*.zip packs/*.rar; do
+            name=$(basename "$a"); name="${name%.*}"
             mkdir -p "extracted/$name"
-            echo "::group::Extracting $f"
-            7z x -y -o"extracted/$name" "$f" >/dev/null || bsdtar -xf "$f" -C "extracted/$name"
-            echo "::endgroup::"
+            7z x -y -o"extracted/$name" "$a" > /dev/null
+            echo "extracted: $name"
           done
 
-      - name: Remove OS junk
+      - name: Strip OS junk
         run: |
-          find extracted -type d -name __MACOSX -prune -exec rm -rf {} +
-          find extracted -name .DS_Store -delete
-          find extracted -name Thumbs.db -delete
+          find extracted -type d -name '__MACOSX' -exec rm -rf {} + 2>/dev/null || true
+          find extracted -type f \( -name '.DS_Store' -o -name 'Thumbs.db' -o -name 'desktop.ini' \) -delete || true
 
-      - name: Commit extracted files
+      - name: Commit and push (skip if nothing changed)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add extracted
+          git add -A
           if git diff --cached --quiet; then
             echo "Nothing new to extract."
             exit 0
           fi
-          git commit -m "auto: extract asset packs into extracted/ [skip ci]"
+          git commit -m "extract: unpack all packs into extracted/ (auto)"
           git push

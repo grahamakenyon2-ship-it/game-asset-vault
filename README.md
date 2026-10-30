@@ -21,3 +21,18 @@ Free-to-use game assets (sprites, animations, UI, effects, models, audio) collec
 - Only assets we are actually allowed to use commercially (CC0, CC-BY, OFL, MIT, or explicit free-commercial-use grants). If a pack's license is unclear, flag it in the ledger — do not assume.
 - Files over 100MB need Git LFS — ask before committing them.
 - No paid-store rips, no AI-scrape packs, no "inspired by" Nintendo/SEGA content.
+
+## Extraction pipeline (auto)
+
+The packs in `packs/` stay untouched as the source of truth. Loose extracted
+files live in `extracted/<pack-name>/`, produced by the **Extract Asset Packs**
+workflow:
+
+- Repo **Actions** tab → *Extract Asset Packs* → **Run workflow**
+- It installs 7-Zip (handles `.zip` **and** `.rar`), moves any stray
+  archive at repo root into `packs/`, extracts every archive into
+  `extracted/<pack-name>/`, strips `__MACOSX`/`.DS_Store` junk, and commits
+  the result back to main.
+- Safe to re-run: only changed content gets committed.
+- `SCAN-NOTES.md` + `ASSET-LICENSES.md` are maintained by Vibe — edit them
+  through a session, not by hand, so verdicts and ledger stay in sync.
