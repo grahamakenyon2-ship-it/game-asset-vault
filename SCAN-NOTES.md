@@ -100,10 +100,12 @@
 
 ---
 
-## Blocked ❌
+## Scanned after extraction (vault-wide rar fix) ✅
 
-### Farm RPG FREE 16x16 — Tiny Asset Pack (.rar) — NOT SCANNED
-- RAR extraction is unavailable in the scan sandbox (no rar/unar/7z, package installs forbidden). **Ask: Alex re-zips it as .zip (right-click → Send to compressed folder) and drops it in packs/ — 30-second fix.** Known pack style: 16x16 tiny farm RPG tiles. License unknown until scanned.
+### Farm RPG FREE 16x16 — Tiny Asset Pack (Maeve — maevedevs.itch.io/farm-rpg) — 16 files
+- **Contents:** character (Idle/Walk sheets, 4-direction frames), farm animals (chicken ×3 colors, baby chick, cows brown M/F), objects (house, interior, fences, maple tree, roads, spring crops, chest), grass tileset. All 16x16 tiny pixel, bright palette, black outlines.
+- **License:** no license file in pack; itch page has no clear license section → **verify-first** (same bucket as Sunnyside/Glionox).
+- **Fit:** tiny-farm genre starter or minigame-scale art; very small footprint (16 tiles total). Pairs with Tiny Wonder Farm / Sprout Lands style-wise (all tiny cute farm pixel) — but note Tiny Wonder Farm is non-commercial.
 
 ---
 
@@ -128,5 +130,5 @@ BB's art is hand-coded canvas drawing and should stay that way — BUT from this
 
 ## Coverage disclosure (research-integrity)
 - **Read/scanned fully (16/17):** all zips extracted; structure mapped to file level; PNG dimension census on all 15,770 PNGs; all 8 in-pack license/readme text files read in full; 20 representative assets visually analyzed; 10 itch.io pages checked for license terms (4 opened full; Tiny Swords + Tiny Wonder Farm licenses verified verbatim).
-- **Not read:** Farm RPG .rar (blocked, no rar tool). Sunnyside/Glionox/Legacy-Fantasy/MegaPackFree/Sfx-pack-4/Basic_GUI/Pixel-UI-3/MuchoPixels license = NOT definitively verified → flagged verify-first in ledger.
+- **Not read (now resolved):** Farm RPG .rar scanned post-extraction via the repo workflow (see above). Sunnyside/Glionox/Legacy-Fantasy/MegaPackFree/Sfx-pack-4/Basic_GUI/Pixel-UI-3/MuchoPixels license = NOT definitively verified → flagged verify-first in ledger.
 - **Partial:** PDF license text for Muchopixels decoded partially (contact links + gamedevmarket pro-license reference; final free-pack wording should be re-checked on their itch page before shipping).

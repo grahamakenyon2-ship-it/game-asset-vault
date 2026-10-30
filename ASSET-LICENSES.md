@@ -21,4 +21,4 @@ Legend: ✅ commercial-clear · ⚠️ verify before shipping · ❌ non-commerc
 | MegaPackFree | unknown | unknown | — | ⚠️ needs itch URL | cats + PastelUI + animals |
 | Sfx pack 4 free | unknown | unknown | — | ⚠️ needs itch URL | 70 wav: hit/coin/jump/powerup/select/shoot/explosion |
 | mp_character_animation v1.0 | Mucho Pixels — muchopixels.itch.io | "entirely free"; standard Muchopixels free license | credit appreciated | ⚠️ confirm wording | .pyxel sources; 4,884 files |
-| Farm RPG FREE 16x16 (.rar) | unknown | unknown | — | ❓ UNSCANNED — Alex re-zip as .zip | blocked: no rar tool in sandbox |
+| Farm RPG FREE 16x16 - Tiny Asset Pack | Maeve — maevedevs.itch.io/farm-rpg | no statement found in pack; check page | — | ⚠️ verify | 16x16 farm: char idle/walk, chickens+ cows, house/interior/fences/crops/chest, grass tileset; bright, black outlines |
