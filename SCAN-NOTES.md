@@ -124,6 +124,12 @@ BB's art is hand-coded canvas drawing and should stay that way — BUT from this
 - **Cat café/cozy:** MegaPackFree cats — mascot + UI starter.
 - **Dungeon RPG:** Pixel Crawler + Dungeon Explorer + Legacy-Fantasy.
 
+## License final sweep (Oct 30, v1.3)
+- MegaPackFree, Sfx pack 4 free, Basic_GUI_Bundle → **CC0 per creator comments** (Alex verified) — flipped green.
+- Legacy-Fantasy High Forest → **Anokolisa**, page states "completely free for commercial use and editions" — green.
+- Pixel UI pack 3 → superseded by **Cozy UI (dobo-ui)** — page verified commercial-friendly; BUT the Cozy UI zip is NOT in the repo yet (failed upload? 25MB browser limit) — Alex re-uploads to packs/, workflow auto-extracts.
+- Remaining amber: Glionox items (page has no license section — needs creator contact or Alex's purchase context). Remaining red: Sprout Lands + Tiny Wonder Farm free (non-commercial, permanent).
+
 ## Housekeeping
 - `Free Platform Game Assets.zip` sits at repo ROOT instead of packs/ — move it into packs/ (or re-upload there and delete root copy) when convenient.
 - `ASSET-LICENSES.md` ledger updated with all 17 rows — keep it current when adding packs.
