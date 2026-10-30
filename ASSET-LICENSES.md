@@ -23,4 +23,4 @@ Legend: ✅ commercial-clear · ⚠️ verify before shipping · ✅ commercial-
 | mp_character_animation v1.0 | Mucho Pixels — muchopixels.itch.io | "entirely free and always will be" (page) | credit appreciated | ✅ (confirm final wording before ship) | .pyxel sources; 4,884 files |
 | Farm RPG FREE 16x16 - Tiny Asset Pack | Maeve — maevedevs.itch.io/farm-rpg | no statement found in pack; check page | — | ⚠️ verify | 16x16 farm: char idle/walk, chickens+ cows, house/interior/fences/crops/chest, grass tileset; bright, black outlines |
 
-| Cozy UI (dobo-ui) | dobo-ui — dobo-ui.itch.io/cozy-ui (page verified: personal + commercial use/rework OK; no resell/distribute, no NFT/AI) | custom free | not required | ✅ (awaiting zip in repo) | **ZIP MISSING — re-upload to packs/ needed** (likely hit 25MB browser limit) |
+| Cozy UI DEMO (dobo-ui) | dobo-ui — dobo-ui.itch.io/cozy-ui (page verified: personal + commercial use/rework OK; no resell/distribute, no NFT/AI) | custom free | not required | ✅ | extracted; DEMO subset (buttons/cards/checkboxes/containers/cursors/icons/inventory); full version = paid upgrade |
