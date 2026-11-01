@@ -138,3 +138,30 @@ BB's art is hand-coded canvas drawing and should stay that way — BUT from this
 - **Read/scanned fully (16/17):** all zips extracted; structure mapped to file level; PNG dimension census on all 15,770 PNGs; all 8 in-pack license/readme text files read in full; 20 representative assets visually analyzed; 10 itch.io pages checked for license terms (4 opened full; Tiny Swords + Tiny Wonder Farm licenses verified verbatim).
 - **Not read (now resolved):** Farm RPG .rar scanned post-extraction via the repo workflow (see above). Sunnyside/Glionox/Legacy-Fantasy/MegaPackFree/Sfx-pack-4/Basic_GUI/Pixel-UI-3/MuchoPixels license = NOT definitively verified → flagged verify-first in ledger.
 - **Partial:** PDF license text for Muchopixels decoded partially (contact links + gamedevmarket pro-license reference; final free-pack wording should be re-checked on their itch page before shipping).
+
+---
+
+# 3D SCAN — Nov 1 2026 (Alex loaded 22 3D packs; extracted/ now 42 packs, ~798 3D model/anim/render files)
+
+## What we now own, by capability
+- **World-building kits:** ToonStyleStuff (127 toon objs — buildings + full household), Cartoon furniture (~36 house models), 3D Leap Land (77 platformer models, CC0-verified), KayKit Mixed Bag (~82 props, CC0-verified), Toyamon forest/farm/food, PolyDesert (desert), Terrain_kit (chocolate/waffle terrain), modular platformer props (⚠️ Mario-iconography caveat)
+- **Characters:** Kenney Carrot (rigged, blend + glb + fbx + 2D render spinoffs), Free Male Character (modular + PBR), RiggedCharacterBase (blend source — build custom humans on it), 3D Platformer Pack rigged character (in .7z, pending extraction)
+- **Vehicles:** 11 city cars + atlas, 12 lowpoly cars (CC0-verified)
+- **VFX:** ElectricFX (CC0, needs Godot→GLSL port)
+- **Animation:** Carrot's 16 APNG walk cycles (2D); no skeletal animation library in the 3D haul yet → Quaternius Universal Animation Library / Mixamo still the gap-fillers.
+
+## Format notes (three.js)
+- glTF/GLB = load directly (GLB pack, KayKit, Toyamon, cars, Terrain_kit, Carrot).
+- OBJ+MTL = three.js OBJLoader fine but no rigs/animations.
+- FBX = FBXLoader works but heavier; prefer converting to glTF.
+- unitypackage = tar.gz, extractable without Unity.
+- .ccb (Coppercube) = not web-loadable; use the obj_and_pngs twin instead.
+
+## Best "first 3D game" combos enabled
+1. **Toon city/interior game:** ToonStyleStuff + Cartoon furniture + Carrot character = a complete toon town (cohesive style family).
+2. **3D platformer:** 3D Leap Land + modular platformer props (de-iconified) + Carrot or the rigged base — CC0-verified core.
+3. **Stylized farm/forest:** Toyamon + Terrain_kit + KayKit props.
+
+## Pipeline gaps (still open)
+- Skeletal animation library (Quaternius UAL / Mixamo — outside the vault).
+- The .7z + .rbxm + 2 stray .blend packs need extraction pass (extend GitHub workflow to 7z, or Alex re-zips).

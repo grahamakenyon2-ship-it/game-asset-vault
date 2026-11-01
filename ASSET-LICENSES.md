@@ -24,3 +24,23 @@ Legend: ✅ commercial-clear · ⚠️ verify before shipping · ✅ commercial-
 | Farm RPG FREE 16x16 - Tiny Asset Pack | Maeve — maevedevs.itch.io/farm-rpg | no statement found in pack; check page | — | ⚠️ verify | 16x16 farm: char idle/walk, chickens+ cows, house/interior/fences/crops/chest, grass tileset; bright, black outlines |
 
 | Cozy UI DEMO (dobo-ui) | dobo-ui — dobo-ui.itch.io/cozy-ui (page verified: personal + commercial use/rework OK; no resell/distribute, no NFT/AI) | custom free | not required | ✅ | extracted; DEMO subset (buttons/cards/checkboxes/containers/cursors/icons/inventory); full version = paid upgrade |
+## 3D PACKS — added Nov 1 2026 (Alex loaded the 3D haul; he attests all are free for personal + commercial use)
+
+| Pack name | Creator / Source | License | Attribution | Commercial verdict | Notes |
+|---|---|---|---|---|---|
+| 3D Leap Land | itch 3D platformer kit | **CC0** (txt in pack, read Nov 1) | none | ✅ | 77 models obj+fbx (balloons/bee/cannon/clouds/coins/bridges/platforms) + tex atlas + blend |
+| KayKit Mixed Bag 1 FREE | Kay Lousberg — kaylousberg.com | **CC0** (License.txt in pack, read Nov 1) | not required | ✅ | ~82 models ×3 formats (obj/fbx/gltf): chains, plushies, circus tent, comics, coins, misc props |
+| lowpoly_cars_free | Cosmo — cosmo-art.itch.io | **CC0** (License.txt in pack, read Nov 1) | none | ✅ | 12 cars in glb/obj/fbx |
+| ElectricFXFree | Binbun3D — bun3d.com | **CC0** (license.txt in pack, read Nov 1) | none | ✅ | electric VFX — Godot gdshader format, needs GLSL port for three.js |
+| carrot (blend + isometric/portraits/sidescroller) | Kenney — "Carrot" character | **CC0** (Kenney standard) | none | ✅ | rigged 3D carrot character (blend + models in GLB/Models packs) + 152 iso renders + 16 APNG walk cycles + portraits + sidescroller renders |
+| ToonStyleStuff (obj_and_pngs + Coppercube .ccb) | Coppercube toon pack — source page TBC | Alex attested (Nov 1): free personal+commercial | — | ✅ (attested) | **127 toon objs**: buildings ×4, household/retro props (TV, radio, ATM, phones, kitchen), with mtl + 108 png textures |
+| Cartoon furniture (GLB.zip + Models.zip) | same toon family — source TBC | Alex attested | — | ✅ (attested) | ~36 furniture/house models, glb + fbx + "Cartoon Color" atlas (beds, wardrobes, kitchen, walls, doors) |
+| Free Cars | city vehicle pack — source TBC | Alex attested | — | ✅ (attested) | 11 vehicles (taxi, police, ambulance, ice cream trucks, bus, sports cars) + city atlas |
+| Free Male Character | Unity-format modular character — source TBC | Alex attested | — | ✅ (attested) | modular male (body/top/bottom/shoes/hair) + PBR normal/RGB maps, prefab |
+| RiggedCharacterBase-with-Hair v1.2 | rigged base — source TBC | Alex attested | — | ✅ (attested) | Blender source + FBX — the custom-character starting rig |
+| PacksSample_Toyamon | Toyamon sample pack | Alex attested | — | ✅ (attested) | stylized Farm Animals (horse etc.) + Forest Environment + Stylized Food, fbx+gltf |
+| Terrain_kit | stylized terrain — source TBC | Alex attested | — | ✅ (attested) | glb+fbx terrain + chocolate & waffle PBR texture sets |
+| PolyDesertFree v1.1 | Runemark Studio | free (Alex attested; Runemark = Poly Pizza family) | none | ✅ (attested) | desert kit: 8 rocks, cacti, aloe + atlas, obj/fbx/unitypackage |
+| modular_platformer_models (+unity pkg) | cartoon platformer props — source TBC | Alex attested | — | ⚠️ **style contains Mario-like iconography** (question blocks, pipes, mushrooms) — vault README bans Nintendo-inspired content: prototype only unless de-iconified | 75 obj: blocks, bridges, pipes, fences, flowers, trees, slides |
+| Unity.zip + modular_platformer_unity_package | Unity packages | same as contents | — | ✅ | unitypackage = gzipped tar; assets extractable without Unity |
+| FreeCartoon Furniture Pack.blend / FreeLowpolyPack.blend / 3D Platformer Pack + Rigged Character.7z / low poly nature .rbxm | raw sources, unscanned | Alex attested | — | ✅ (attested) | **.7z not handled by extract workflow** (zip/rar only) — re-zip or extend workflow; .rbxm needs Roblox Studio |
