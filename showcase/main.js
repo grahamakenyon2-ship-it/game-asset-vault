@@ -1,9 +1,10 @@
 /* ============================================================
-   ASSET VAULT 3D — Showcase World
-   Every 3D asset family in the game-asset-vault, one island,
-   full HTML5 polish: shadows, toon/standard shading, day/night,
-   bloom, particles, electric VFX, animated character, driving
-   cars, collectibles, sound + music synth. 100% offline.
+   ASSET VAULT 3D — Showcase World  (v2: game-feel pass)
+   v2 changes: real third-person controller (camera-relative move,
+   accel/decel, coyote+buffer+variable jump), auto-align camera,
+   procedural Mixamo-rig animation (idle/walk/run/jump/land),
+   character palette + fixed material toggle (multi-material safe),
+   dust puffs, coin magnet, FOV kick, landing squash.
    ============================================================ */
 (function () {
   'use strict';
@@ -21,7 +22,6 @@
     return buf;
   }
 
-  // toon gradient (4-step) shared by all toon materials
   var gradData = new Uint8Array([70, 70, 70, 70, 140, 140, 140, 140, 200, 200, 200, 200, 255, 255, 255, 255]);
   var GRADIENT = new THREE.DataTexture(gradData, 4, 1, THREE.LuminanceFormat);
   GRADIENT.minFilter = THREE.NearestFilter; GRADIENT.magFilter = THREE.NearestFilter;
@@ -39,9 +39,9 @@
   renderer.toneMappingExposure = 1.05;
 
   var scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xbfd9e8, 120, 340);
+  scene.fog = new THREE.Fog(0xbfd9e8, 140, 380);
 
-  var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 600);
+  var camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 600);
   camera.position.set(0, 6, 12);
 
   var composer = new THREE.EffectComposer(renderer);
@@ -79,7 +79,6 @@
   );
   scene.add(sky);
 
-  // stars (fade in at night)
   var starGeo = new THREE.BufferGeometry();
   (function () {
     var pts = [];
@@ -93,7 +92,7 @@
   var stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, transparent: true, opacity: 0, fog: false }));
   scene.add(stars);
 
-  // ---------- ground / water ----------
+  // ---------- ground / water / road ----------
   var groundCanvas = document.createElement('canvas');
   groundCanvas.width = groundCanvas.height = 256;
   (function () {
@@ -130,7 +129,6 @@
   water.rotation.x = -Math.PI / 2; water.position.y = -0.35;
   scene.add(water);
 
-  // ring road (dark asphalt ring on the island)
   var road = new THREE.Mesh(new THREE.RingGeometry(84, 96, 96), new THREE.MeshToonMaterial({ color: 0x4c4a52, gradientMap: GRADIENT }));
   road.rotation.x = -Math.PI / 2; road.position.y = 0.02; road.receiveShadow = true;
   scene.add(road);
@@ -142,8 +140,14 @@
   var manager = new THREE.LoadingManager();
   var texCache = {};
   manager.setURLModifier(function (url) {
+    // match by basename AND by substring (FBX stores absolute Windows paths with junk suffixes)
     var base = url.split('/').pop().split('\\').pop();
+    if (base.indexOf('.png') > 0) base = base.slice(0, base.indexOf('.png') + 4);
+    if (base.indexOf('.jpg') > 0) base = base.slice(0, base.indexOf('.jpg') + 4);
     if (ASSETS['tex_' + base]) return ASSETS['tex_' + base];
+    for (var k in ASSETS) {
+      if (k.indexOf('tex_') === 0 && url.indexOf(k.slice(4)) >= 0) return ASSETS[k];
+    }
     return url;
   });
   function texFromAssets(key, repeat) {
@@ -204,15 +208,20 @@
   // ---------- audio ----------
   var AC = null, musicOn = false, musicTimer = null, musicStep = 0;
   function audioCtx() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return AC; }
+  var sfxCache = {};
   function sfx(key, vol) {
     try {
       var ctx = audioCtx(); if (!ctx || !ASSETS[key]) return;
-      ctx.decodeAudioData(b64ToBuf(ASSETS[key]), function (buf) {
-        var src = ctx.createBufferSource(); src.buffer = buf;
-        var g = ctx.createGain(); g.gain.value = vol || 0.5;
-        src.connect(g); g.connect(ctx.destination); src.start();
-      });
+      if (!sfxCache[key]) {
+        ctx.decodeAudioData(b64ToBuf(ASSETS[key]), function (buf) { sfxCache[key] = buf; playBuf(buf, vol); });
+      } else playBuf(sfxCache[key], vol);
     } catch (e) {}
+  }
+  function playBuf(buf, vol) {
+    var ctx = audioCtx(); if (!ctx) return;
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var g = ctx.createGain(); g.gain.value = vol || 0.5;
+    src.connect(g); g.connect(ctx.destination); src.start();
   }
   var SCALE = [0, 3, 5, 7, 10, 12, 15, 17];
   var MELODY = [0, 4, 2, 5, 1, 4, 3, 2, 0, 4, 2, 5, 7, 6, 5, 3];
@@ -243,16 +252,13 @@
   }
 
   // ---------- world state ----------
-  var PLATFORMS = [];   // {min:Vector3, max:Vector3}
-  var COINS = [];        // {mesh, taken, sparkle}
-  var SPINNERS = [];     // {obj, speed}
-  var BOBBERS = [];      // {obj, phase, amp}
+  var PLATFORMS = [];
+  var COINS = [];
+  var SPINNERS = [];
+  var BOBBERS = [];
   var CARS = [];
   var FIREFLIES = null;
-  var state = {
-    coins: 0, toonMode: true, bloomOn: true, dayT: 0.32,
-    char: 'human', zone: '', mixer: null, action: null
-  };
+  var state = { coins: 0, toonMode: true, bloomOn: true, dayT: 0.32, char: 'human', zone: '' };
 
   function addPlatform(mesh) {
     mesh.updateMatrixWorld(true);
@@ -261,6 +267,7 @@
   }
 
   // ---------- zone: TOON PLAZA ----------
+  var PLAZA_LAMPS = null, ARC_MAT = null;
   function buildPlaza() {
     var plaza = new THREE.Group(); plaza.position.set(0, 0, -52);
 
@@ -275,7 +282,7 @@
       var g = loadOBJ(b[0], m);
       fit(g, 9);
       g.position.set(b[2], 0, b[3] - 2);
-      g.lookAt(plaza.position.x, 9, plaza.position.z + 40);
+      g.lookAt(0, 0, 60);
       plaza.add(g);
     });
 
@@ -292,7 +299,6 @@
       plaza.add(g);
     });
 
-    // furniture glbs (table set, cooker, book stack, joystick, camera)
     var furn = [
       ['furn_Table_1.glb', 1.5, -2.5, 0.55, 0],
       ['furn_Chair_1.glb', 1.3, -2.5, 2.2, 0.35],
@@ -311,7 +317,6 @@
       });
     });
 
-    // lamp posts + electric arc VFX
     var lampMat = new THREE.MeshToonMaterial({ color: 0x35414e, gradientMap: GRADIENT });
     var lampSpots = [[-8, 6], [8, 6]];
     var lampLights = [];
@@ -322,12 +327,11 @@
       bulb.position.set(s[0], 4.5, s[1]);
       var l = new THREE.PointLight(0xffd98a, 0, 26, 2);
       l.position.set(s[0], 4.5, s[1]);
-      plaza.add(post, bulb, l);
+      plaza.add(post); plaza.add(bulb); plaza.add(l);
       lampLights.push({ light: l, bulb: bulb, phase: i * 2.1 });
     });
     PLAZA_LAMPS = lampLights;
 
-    // electric arc between the two lamps (custom shader)
     var arcCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(-8, 4.5, 6), new THREE.Vector3(-4, 5.2, 6.3),
       new THREE.Vector3(0, 4.6, 5.9), new THREE.Vector3(4, 5.3, 6.2), new THREE.Vector3(8, 4.5, 6)
@@ -346,29 +350,25 @@
     plaza.add(arc);
     ARC_MAT = arcMat;
 
-    // fountain: toon water disc + stone ring
     var ring = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.55, 10, 32), new THREE.MeshToonMaterial({ color: 0x9aa7b5, gradientMap: GRADIENT }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.3;
     var pool = new THREE.Mesh(new THREE.CircleGeometry(2.35, 32), new THREE.MeshToonMaterial({ color: 0x54b3e8, gradientMap: GRADIENT }));
     pool.rotation.x = -Math.PI / 2; pool.position.y = 0.42;
     var jet = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.8, 10), new THREE.MeshToonMaterial({ color: 0x7fd0f5, gradientMap: GRADIENT, transparent: true, opacity: 0.75 }));
     jet.position.y = 1.1;
-    plaza.add(ring, pool, jet);
+    plaza.add(ring); plaza.add(pool); plaza.add(jet);
     BOBBERS.push({ obj: jet, phase: 0, amp: 0.05, scaleY: true });
 
     scene.add(plaza);
   }
-  var PLAZA_LAMPS = null, ARC_MAT = null;
 
-  // ---------- zone: JUMP RIDGE (platformer) ----------
+  // ---------- zone: JUMP RIDGE ----------
   function buildRidge() {
     var ridge = new THREE.Group(); ridge.position.set(56, 0, 40);
 
     var cubeMat = new THREE.MeshToonMaterial({ map: texFromAssets('tex_MyPalette.png'), gradientMap: GRADIENT });
-    var crateMat = new THREE.MeshToonMaterial({ map: texFromAssets('tex_MyPalette.png'), gradientMap: GRADIENT });
     var pickMat = new THREE.MeshToonMaterial({ color: 0xffd24a, gradientMap: GRADIENT, emissive: 0x996600 });
 
-    // staircase of cubes with a big crate
     var steps = [
       [0, 0, 0, 2], [3, 1, 1.5, 2], [6.5, 2.2, 1, 2.6], [10, 3.6, -1, 3], [13.5, 5, -3.5, 3.6]
     ];
@@ -380,11 +380,10 @@
       ridge.add(c); addPlatform(c);
     });
     var crate = loadFBX('plat_Crate_Big.fbx');
-    eachMesh(crate, function (m) { m.material = crateMat; m.castShadow = m.receiveShadow = true; });
+    eachMesh(crate, function (m) { m.material = cubeMat; m.castShadow = m.receiveShadow = true; });
     fit(crate, 2.4); crate.position.set(-4, 1.2, 1);
     ridge.add(crate); addPlatform(crate);
 
-    // floating leap-land cloud platforms + bridge
     var cloudMat = new THREE.MeshToonMaterial({ color: 0xf4f9ff, gradientMap: GRADIENT });
     var cloudPos = [[-4, 3.4, 8], [-1, 4.8, 12], [3, 6.2, 14]];
     cloudPos.forEach(function (p) {
@@ -397,7 +396,6 @@
     bridge.position.set(16, 4, 0); bridge.rotation.y = 0.4;
     ridge.add(bridge);
 
-    // balloons tethered around
     var balloonCols = { 'leap_balloon_red.obj': 0xe4574d, 'leap_balloon_blue.obj': 0x4d9de0, 'leap_balloon_yellow.obj': 0xe8c14d };
     Object.keys(balloonCols).forEach(function (k, i) {
       var b = loadOBJ(k, new THREE.MeshToonMaterial({ color: balloonCols[k], gradientMap: GRADIENT }));
@@ -410,7 +408,6 @@
       ridge.add(string);
     });
 
-    // cannon + gem + flowers decor
     var cannon = loadOBJ('leap_cannon.obj', new THREE.MeshToonMaterial({ color: 0x5a6472, gradientMap: GRADIENT }));
     fit(cannon, 1.6); cannon.position.set(-11, 0.8, -3); cannon.rotation.y = 2.4; ridge.add(cannon);
     var gem = loadOBJ('leap_gem.obj', new THREE.MeshToonMaterial({ color: 0x54e0c2, gradientMap: GRADIENT, emissive: 0x0a4f40 }));
@@ -420,14 +417,13 @@
     var flag = loadOBJ('leap_flag.obj', new THREE.MeshToonMaterial({ color: 0x4d9de0, gradientMap: GRADIENT }));
     fit(flag, 2.6); flag.position.set(16, 4, -4); ridge.add(flag); SPINNERS.push({ obj: flag, speed: 0.4 });
 
-    // coins: leap coins on the stair tops + pickups floating
     var coinMat = new THREE.MeshToonMaterial({ color: 0xffcf3f, gradientMap: GRADIENT, emissive: 0x8f6a00 });
     steps.forEach(function (s) {
       var coin = loadOBJ('leap_coin.obj', coinMat);
       fit(coin, 0.8);
       coin.position.set(s[0], s[1] + s[3] + 0.7, s[2]);
       ridge.add(coin);
-      COINS.push({ mesh: coin, taken: false });
+      COINS.push({ mesh: coin, taken: false, base: coin.position.clone() });
     });
     [[-4, 4.6, 8], [-1, 6, 12], [3, 7.4, 14], [16, 6.2, 0]].forEach(function (p) {
       var pk = loadFBX('plat_Pickup.fbx');
@@ -435,7 +431,7 @@
       fit(pk, 1);
       pk.position.set(p[0], p[1], p[2]);
       ridge.add(pk);
-      COINS.push({ mesh: pk, taken: false });
+      COINS.push({ mesh: pk, taken: false, base: pk.position.clone() });
     });
 
     scene.add(ridge);
@@ -455,7 +451,6 @@
       farm.add(f);
     }
 
-    // Toyamon horse
     loadGLTFInline('toy_horse.gltf', 'toy_horse.bin', function (o) {
       fit(o, 2.1);
       o.position.set(-5, 0, 2); o.rotation.y = 0.8;
@@ -464,7 +459,6 @@
       BOBBERS.push({ obj: o, phase: 2, amp: 0.02 });
     });
 
-    // KayKit props (atlas-textured)
     var kk = [
       ['kk_chicken_plushie_A.gltf', 'kk_chicken_plushie_A.bin', 0.9, 6, 2, 0.3],
       ['kk_chicken_plushie_B.gltf', 'kk_chicken_plushie_B.bin', 0.9, 7.5, 3.5, -0.6],
@@ -484,7 +478,6 @@
       });
     });
 
-    // grass blades + flowers
     var grassMat = new THREE.MeshToonMaterial({ color: 0x4e9e3d, gradientMap: GRADIENT });
     for (var i = 0; i < 26; i++) {
       var g = loadOBJ('leap_grass_blades_1.obj', grassMat);
@@ -495,13 +488,12 @@
       farm.add(g);
     }
 
-    // CARROT statue on pedestal
     loadGLB('furn_Carrot.glb', function (o) {
       fit(o, 2.6);
       var ped = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.7, 0.9, 14), new THREE.MeshToonMaterial({ color: 0x9aa7b5, gradientMap: GRADIENT }));
       ped.position.set(10, 0.45, 10); ped.castShadow = ped.receiveShadow = true;
       o.position.set(10, 1.0, 10);
-      farm.add(ped, o);
+      farm.add(ped); farm.add(o);
       SPINNERS.push({ obj: o, speed: 0.6 });
     });
 
@@ -545,22 +537,77 @@
     scene.add(FIREFLIES);
   }
 
-  // ---------- player ----------
+  // ============================================================
+  // PLAYER — character with palette + procedural Mixamo animation
+  // ============================================================
   var player = new THREE.Group();
   player.position.set(0, 0, -8);
   scene.add(player);
   var human = null, carrot = null;
-  var mixer = null, curAction = null;
+  var bones = {};   // mixamorig bone map
+  var palette = {   // fallback outfit colors when the FBX texture map fails
+    hair: 0x5a3a22, skin: 0xeab58a, top: 0x3e7bd0, pants: 0x31425f, shoe: 0x23262e, default: 0x9a7bbd
+  };
+
+  function dressHuman(obj) {
+    eachMesh(obj, function (m) {
+      m.castShadow = true;
+      m.frustumCulled = false; // skinned meshes can get culled wrongly at our scale
+      var mats = Array.isArray(m.material) ? m.material : [m.material];
+      var fixed = mats.map(function (mat) {
+        if (!mat) return new THREE.MeshToonMaterial({ color: palette.default, gradientMap: GRADIENT });
+        var map = mat.map || null;
+        var name = ((mat.name || '') + ' ' + (m.name || '')).toLowerCase();
+        var col = null;
+        if (name.indexOf('hair') >= 0) col = palette.hair;
+        else if (name.indexOf('face') >= 0 || name.indexOf('skin') >= 0 || name.indexOf('head') >= 0) col = palette.skin;
+        else if (name.indexOf('top') >= 0 || name.indexOf('shirt') >= 0 || name.indexOf('jacket') >= 0 || name.indexOf('body') >= 0) col = palette.top;
+        else if (name.indexOf('bot') >= 0 || name.indexOf('pant') >= 0 || name.indexOf('jean') >= 0 || name.indexOf('leg') >= 0) col = palette.pants;
+        else if (name.indexOf('shoe') >= 0 || name.indexOf('foot') >= 0) col = palette.shoe;
+        else if (!map) col = palette.default;
+        var p = {
+          map: map, gradientMap: GRADIENT, transparent: !!mat.transparent, opacity: mat.opacity !== undefined ? mat.opacity : 1,
+          side: mat.side !== undefined ? mat.side : THREE.FrontSide
+        };
+        if (col !== null) p.color = col;
+        else if (mat.color) p.color = mat.color.clone();
+        else p.color = new THREE.Color(palette.default);
+        return new THREE.MeshToonMaterial(p);
+      });
+      m.material = fixed.length === 1 ? fixed[0] : fixed;
+    });
+  }
 
   function buildPlayer() {
     human = loadFBX('plat_Rigged_Character.fbx');
-    eachMesh(human, function (m) { m.castShadow = true; if (m.material) { m.material.transparent = false; } });
     fit(human, 1.75);
-    if (human.animations && human.animations.length) {
-      mixer = new THREE.AnimationMixer(human);
-      curAction = mixer.clipAction(human.animations[0]);
-      curAction.play();
-    } else { log('rigged character has no embedded clips'); }
+    dressHuman(human);
+    // collect bones
+    human.traverse(function (o) {
+      if (o.isBone) {
+        var n = o.name.toLowerCase();
+        bones[o.name] = o;
+        if (n.indexOf('hips') >= 0) bones.hips = o;
+        else if (n.indexOf('spine2') >= 0) bones.spine2 = o;
+        else if (n.indexOf('spine1') >= 0) bones.spine1 = o;
+        else if (n.indexOf('spine') >= 0 && !bones.spine) bones.spine = o;
+        else if (n.indexOf('neck') >= 0) bones.neck = o;
+        else if (n.indexOf('head') >= 0 && n.indexOf('top') < 0 && n.indexOf('end') < 0) bones.head = o;
+        else if (n.indexOf('leftupleg') >= 0) bones.Lupleg = o;
+        else if (n.indexOf('leftleg') >= 0 && n.indexOf('up') < 0) bones.Lleg = o;
+        else if (n.indexOf('rightupleg') >= 0) bones.Rupleg = o;
+        else if (n.indexOf('rightleg') >= 0 && n.indexOf('up') < 0) bones.Rleg = o;
+        else if (n.indexOf('leftarm') >= 0 && n.indexOf('fore') < 0) bones.Larm = o;
+        else if (n.indexOf('leftforearm') >= 0) bones.Lfore = o;
+        else if (n.indexOf('rightarm') >= 0 && n.indexOf('fore') < 0) bones.Rarm = o;
+        else if (n.indexOf('rightforearm') >= 0) bones.Rfore = o;
+        else if (n.indexOf('lefthand') >= 0) bones.Lhand = o;
+        else if (n.indexOf('righthand') >= 0) bones.Rhand = o;
+      }
+    });
+    var mapped = ['hips', 'spine', 'spine1', 'spine2', 'neck', 'head', 'Lupleg', 'Lleg', 'Rupleg', 'Rleg', 'Larm', 'Lfore', 'Rarm', 'Rfore'].filter(function (k) { return !!bones[k]; });
+    log('bones mapped: ' + mapped.join(','));
+    if (!bones.hips) log('WARNING: no mixamorig hips found — procedural anim disabled');
     player.add(human);
 
     loadGLB('furn_Carrot.glb', function (o) {
@@ -571,33 +618,86 @@
     });
   }
 
-  // ---------- controls ----------
+  // ---- procedural animation (idle / walk / run / air) ----
+  var stridePhase = 0, squash = 0;
+  var restPose = {}; // remember initial rotations
+  function recordRest(b) { for (var k in b) { var o = b[k]; if (o && o.isBone && !restPose[k]) restPose[k] = { rx: o.rotation.x, ry: o.rotation.y, rz: o.rotation.z, py: o.position.y }; } }
+  function animHuman(dt, speedNorm, airborne, elapsed) {
+    if (!bones.hips) return;
+    recordRest(bones);
+    stridePhase += dt * (4 + 10 * speedNorm); // stride frequency follows speed
+    var s = Math.sin(stridePhase), c = Math.cos(stridePhase);
+    var walk = Math.min(1, speedNorm * 1.6);      // 0 idle -> 1 full run
+    var air = airborne ? 1 : 0;
+    var ease = function (t) { return t * t * (3 - 2 * t); };
+    var w = ease(walk);
+    function leg(Up, Lo, sign) {
+      var UpKey = Up === bones.Lupleg ? 'Lupleg' : 'Rupleg';
+      var LoKey = Up === bones.Lupleg ? 'Lleg' : 'Rleg';
+      if (!Up || !Lo || !restPose[UpKey]) return;
+      if (air) { Up.rotation.x = restPose[UpKey].rx + 0.45; Lo.rotation.x = restPose[LoKey].rx + 0.95; return; }
+      Up.rotation.x = restPose[UpKey].rx + s * 0.75 * w * sign;
+      Lo.rotation.x = restPose[LoKey].rx + Math.max(0, -s * sign) * 1.05 * w + 0.06;
+    }
+    leg(bones.Lupleg, bones.Lleg, 1);
+    leg(bones.Rupleg, bones.Rleg, -1);
+    function arm(A, F, sign) {
+      var AKey = A === bones.Larm ? 'Larm' : 'Rarm';
+      var FKey = A === bones.Larm ? 'Lfore' : 'Rfore';
+      if (!A || !restPose[AKey]) return;
+      var r = restPose[AKey];
+      if (air) { A.rotation.x = r.rx - 1.9; if (F && restPose[FKey]) F.rotation.x = restPose[FKey].rx - 0.4; return; }
+      A.rotation.x = r.rx - s * 0.65 * w * sign + Math.sin(elapsed * 1.7) * 0.03;
+      A.rotation.z = r.rz + 0.12 * w * sign;
+      if (F && restPose[FKey]) F.rotation.x = restPose[FKey].rx - 0.35 - 0.35 * w;
+    }
+    arm(bones.Larm, bones.Lfore, 1);
+    arm(bones.Rarm, bones.Rfore, -1);
+    if (bones.spine2 && restPose.spine2) bones.spine2.rotation.y = restPose.spine2.ry + c * 0.14 * w;
+    if (bones.spine1 && restPose.spine1) bones.spine1.rotation.x = restPose.spine1.rx + 0.05 * w + (air ? 0.12 : 0) + Math.sin(elapsed * 1.9) * 0.015;
+    if (bones.head && restPose.head) bones.head.rotation.x = restPose.head.rx + Math.sin(elapsed * 2.3) * 0.02 - 0.04 * w;
+    if (restPose.hips) {
+      var bob = air ? 0 : Math.abs(c) * 0.045 * w;
+      var breath = air ? 0 : Math.sin(elapsed * 1.6) * 0.008 * (1 - w);
+      bones.hips.position.y = restPose.hips.py + bob + breath;
+      bones.hips.rotation.y = restPose.hips.ry + c * 0.08 * w;
+    }
+  }
+
+  // ---------- third-person controller ----------
   var keys = {};
-  var camYaw = 0, camPitch = 0.36, camDist = 8;
-  var velY = 0, onGround = true, facing = 0;
+  var camYaw = 0, camPitch = 0.36, camDist = 6.5, camDistCur = 6.5;
+  var lastDragT = -10;
+  var vel = new THREE.Vector3();
+  var velY = 0, onGround = true, coyote = 0, jumpBuf = 0, jumpHeld = false;
+  var facing = 0, fovKick = 58;
   var dragging = false, lastX = 0, lastY = 0;
 
   window.addEventListener('keydown', function (e) {
     if (e.repeat) return;
     keys[e.code] = true;
-    if (e.code === 'Space') { jump(); e.preventDefault(); }
+    if (e.code === 'Space') { jumpBuf = 0.14; jumpHeld = true; e.preventDefault(); }
     if (e.code === 'KeyC') swapChar();
     if (e.code === 'KeyT') { state.toonMode = !state.toonMode; applyMaterialMode(); sfx('sfx_blip.wav', 0.35); updateHud(); }
     if (e.code === 'KeyB') { state.bloomOn = !state.bloomOn; bloom.enabled = state.bloomOn; sfx('sfx_blip.wav', 0.35); updateHud(); }
-    if (e.code === 'KeyM') { var on = toggleMusic(); updateHud(); }
+    if (e.code === 'KeyM') { toggleMusic(); updateHud(); }
   });
-  window.addEventListener('keyup', function (e) { keys[e.code] = false; });
+  window.addEventListener('keyup', function (e) {
+    keys[e.code] = false;
+    if (e.code === 'Space') jumpHeld = false;
+  });
 
   canvas.addEventListener('pointerdown', function (e) { dragging = true; lastX = e.clientX; lastY = e.clientY; audioCtx(); });
   window.addEventListener('pointerup', function () { dragging = false; });
   window.addEventListener('pointermove', function (e) {
     if (!dragging) return;
     camYaw -= (e.clientX - lastX) * 0.005;
-    camPitch = Math.max(0.05, Math.min(1.2, camPitch + (e.clientY - lastY) * 0.004));
+    camPitch = Math.max(0.08, Math.min(1.15, camPitch + (e.clientY - lastY) * 0.004));
+    lastDragT = clock.elapsedTime;
     lastX = e.clientX; lastY = e.clientY;
   });
   canvas.addEventListener('wheel', function (e) {
-    camDist = Math.max(3.5, Math.min(22, camDist + e.deltaY * 0.01));
+    camDist = Math.max(3.2, Math.min(16, camDist + e.deltaY * 0.01));
     e.preventDefault();
   }, { passive: false });
 
@@ -608,13 +708,26 @@
     carrot.visible = state.char === 'carrot';
     sfx('sfx_blip.wav', 0.4);
   }
-  function jump() {
-    if (!onGround) return;
-    velY = 8.2; onGround = false;
-    sfx('sfx_jump.wav', 0.3);
-  }
 
-  // coin sparkle burst
+  // dust puffs
+  var puffs = [];
+  function dustPuff(pos, n) {
+    var geo = new THREE.BufferGeometry();
+    var arr = new Float32Array(n * 3), vels = [];
+    for (var i = 0; i < n; i++) {
+      arr[i * 3] = pos.x + (Math.random() - 0.5) * 0.4;
+      arr[i * 3 + 1] = pos.y + 0.05;
+      arr[i * 3 + 2] = pos.z + (Math.random() - 0.5) * 0.4;
+      var a = Math.random() * Math.PI * 2;
+      vels.push(new THREE.Vector3(Math.cos(a) * (0.6 + Math.random()), 0.6 + Math.random() * 0.9, Math.sin(a) * (0.6 + Math.random())));
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+    var p = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xcbb694, size: 0.32, transparent: true, opacity: 0.9, depthWrite: false
+    }));
+    scene.add(p);
+    puffs.push({ pts: p, vels: vels, life: 0.8 });
+  }
   var sparkles = [];
   function burst(pos) {
     var n = 14;
@@ -633,22 +746,30 @@
     sparkles.push({ pts: p, vels: vels, life: 1 });
   }
 
-  // ---------- toon/standard material swap ----------
+  // ---------- material mode (multi-material safe) ----------
+  function convertMat(base) {
+    var map = base.map || null;
+    var p = {
+      map: map, gradientMap: GRADIENT,
+      transparent: base.transparent, opacity: base.opacity !== undefined ? base.opacity : 1,
+      side: base.side !== undefined ? base.side : THREE.FrontSide
+    };
+    if (base.color) p.color = base.color.clone(); else p.color = new THREE.Color(0xffffff);
+    if (base.emissive) p.emissive = base.emissive.clone();
+    if (state.toonMode) return new THREE.MeshToonMaterial(p);
+    delete p.gradientMap; p.roughness = 0.82; p.metalness = 0.05;
+    return new THREE.MeshStandardMaterial(p);
+  }
   function applyMaterialMode() {
     scene.traverse(function (o) {
       if (!o.isMesh) return;
       if (o.material && o.material.isShaderMaterial) return;
-      if (o.isPoints) return;
-      if (!o.userData.baseMat) o.userData.baseMat = o.material;
-      var base = o.userData.baseMat;
-      var map = base.map || null;
-      var color = base.color ? base.color.clone() : new THREE.Color(0xffffff);
-      var emissive = base.emissive ? base.emissive.clone() : new THREE.Color(0x000000);
-      if (state.toonMode) {
-        o.material = new THREE.MeshToonMaterial({ map: map, color: color, gradientMap: GRADIENT, emissive: emissive, transparent: base.transparent, opacity: base.opacity, side: base.side });
-      } else {
-        o.material = new THREE.MeshStandardMaterial({ map: map, color: color, emissive: emissive, roughness: 0.82, metalness: 0.05, transparent: base.transparent, opacity: base.opacity, side: base.side });
+      if (!o.userData.baseMat) {
+        o.userData.baseMat = Array.isArray(o.material) ? o.material.slice() : o.material;
       }
+      var base = o.userData.baseMat;
+      if (Array.isArray(base)) o.material = base.map(convertMat);
+      else o.material = convertMat(base);
     });
   }
 
@@ -660,6 +781,11 @@
     $('hud-music').textContent = musicOn ? 'ON' : 'OFF';
     $('chk-toon').checked = state.toonMode;
     $('chk-bloom').checked = state.bloomOn;
+  }
+  function popCoins() {
+    var el = $('hud-coins').parentElement;
+    el.style.transform = 'scale(1.25)';
+    setTimeout(function () { el.style.transform = 'scale(1)'; }, 130);
   }
   var toastTimer = null;
   function toastZone(name) {
@@ -678,11 +804,10 @@
   var ZONES = [
     { name: 'Toon Plaza — ToonStyleStuff + Cartoon Furniture', x: 0, z: -52, r: 26 },
     { name: 'Jump Ridge — 3D Platformer Pack + Leap Land', x: 56, z: 40, r: 26 },
-    { name: 'Carrot Farms — Toyamon + KayKit + Carrot', x: -56, z: 40, r: 26 },
-    { name: 'Vault Island — everything from the asset vault', x: 0, z: 0, r: 500 }
+    { name: 'Carrot Farms — Toyamon + KayKit + Carrot', x: -56, z: 40, r: 26 }
   ];
   function checkZone() {
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < ZONES.length; i++) {
       var z = ZONES[i];
       var dx = player.position.x - z.x, dz = player.position.z - z.z;
       if (dx * dx + dz * dz < z.r * z.r) {
@@ -695,7 +820,7 @@
 
   // ---------- day/night ----------
   function applyDayNight(t, elapsed) {
-    var ang = t * Math.PI * 2 - Math.PI / 2; // t=0 dawnish
+    var ang = t * Math.PI * 2 - Math.PI / 2;
     var sy = Math.sin(ang), sx = Math.cos(ang);
     var dayF = Math.max(0, Math.min(1, (sy + 0.25) * 1.6));
     var nightF = 1 - dayF;
@@ -723,93 +848,157 @@
     if (ARC_MAT) ARC_MAT.uniforms.time.value = elapsed;
   }
 
-  // ---------- movement + physics ----------
-  var PLAYER_R = 0.42, PLAYER_H = 1.7;
+  // ---------- physics ----------
+  var PLAYER_R = 0.42;
   function groundHeightAt(x, z, curY) {
     var h = 0;
     for (var i = 0; i < PLATFORMS.length; i++) {
       var b = PLATFORMS[i];
       if (x > b.min.x - PLAYER_R && x < b.max.x + PLAYER_R && z > b.min.z - PLAYER_R && z < b.max.z + PLAYER_R) {
-        if (b.max.y > h && b.max.y <= curY + 0.4) h = b.max.y;
+        if (b.max.y > h && b.max.y <= curY + 0.5) h = b.max.y;
       }
     }
-    // island edge
-    var d = Math.sqrt(x * x + z * z);
-    if (d > 118) h = -999; // fell off
     return h;
   }
 
+  var tmpV = new THREE.Vector3();
+  var tmpV2 = new THREE.Vector3();
   function movePlayer(dt, elapsed) {
-    var run = keys['ShiftLeft'] || keys['ShiftRight'];
-    var speed = run ? 11 : 6.5;
+    // input dir, camera-relative (CORRECTED basis)
     var mx = 0, mz = 0;
-    if (keys['KeyW'] || keys['ArrowUp']) mz -= 1;
-    if (keys['KeyS'] || keys['ArrowDown']) mz += 1;
+    if (keys['KeyW'] || keys['ArrowUp']) mz += 1;       // forward = away from camera
+    if (keys['KeyS'] || keys['ArrowDown']) mz -= 1;
     if (keys['KeyA'] || keys['ArrowLeft']) mx -= 1;
     if (keys['KeyD'] || keys['ArrowRight']) mx += 1;
-    var moving = mx !== 0 || mz !== 0;
-    if (moving) {
-      var len = Math.hypot(mx, mz); mx /= len; mz /= len;
-      // camera-relative
-      var cos = Math.cos(camYaw), sin = Math.sin(camYaw);
-      var dx = (mx * cos - mz * sin) * speed * dt;
-      var dz = (mx * sin + mz * cos) * speed * dt;
-      player.position.x += dx; player.position.z += dz;
-      facing = Math.atan2(dx, dz);
-    }
+    var run = keys['ShiftLeft'] || keys['ShiftRight'];
+    var speedTarget = run ? 13 : 7.2;
+    if (state.char === 'carrot') speedTarget *= 1.1;
 
-    // gravity + landing
+    var fwd = tmpV.set(-Math.sin(camYaw), 0, -Math.cos(camYaw));     // camera -> forward
+    var right = tmpV2.set(-fwd.z, 0, fwd.x);                          // screen-right
+    var wish = new THREE.Vector3(fwd.x * mz + right.x * mx, 0, fwd.z * mz + right.z * mx);
+    var wishLen = wish.length();
+    if (wishLen > 0.0001) wish.multiplyScalar(1 / wishLen);
+
+    // accel/decel
+    var accel = wishLen > 0 ? (onGround ? 42 : 14) : (onGround ? 26 : 4);
+    var target = wish.multiplyScalar(wishLen > 0 ? speedTarget : 0);
+    vel.x += (target.x - vel.x) * Math.min(1, accel * dt / 6);
+    vel.z += (target.z - vel.z) * Math.min(1, accel * dt / 6);
+    var planarSpeed = Math.hypot(vel.x, vel.z);
+
+    player.position.x += vel.x * dt;
+    player.position.z += vel.z * dt;
+
+    // jump: coyote + buffer + variable height
     var feet = player.position.y;
     var gh = groundHeightAt(player.position.x, player.position.z, feet);
-    velY -= 22 * dt;
+    if (onGround) coyote = 0.12; else coyote = Math.max(0, coyote - dt);
+    jumpBuf = Math.max(0, jumpBuf - dt);
+    if (jumpBuf > 0 && coyote > 0) {
+      velY = 10; onGround = false; coyote = 0; jumpBuf = 0;
+      squash = -0.18;
+      sfx('sfx_jump.wav', 0.3);
+      dustPuff(player.position, 8);
+    }
+    velY -= 26 * dt;
+    if (velY < 0 && !jumpHeld) velY -= 18 * dt;   // short hop when released
     player.position.y += velY * dt;
-    if (gh === -999) { // fell off island: respawn
-      player.position.set(0, 3, -8); velY = 0;
-      sfx('sfx_hit.wav', 0.35);
-    } else if (player.position.y <= gh) {
-      player.position.y = gh; velY = 0;
-      if (!onGround) { onGround = true; }
+
+    if (player.position.y <= gh) {
+      if (!onGround && velY < -4) {
+        squash = 0.16;
+        dustPuff(player.position, 10);
+        sfx('sfx_hit.wav', 0.12);
+      }
+      player.position.y = gh; velY = 0; onGround = true;
     } else if (player.position.y > gh + 0.02) { onGround = false; }
 
-    // character facing + anim
-    var targetRot = facing;
-    if (moving) {
-      var cur = player.rotation.y;
-      var diff = ((targetRot - cur + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-      player.rotation.y = cur + diff * Math.min(1, dt * 10);
+    // fell off the island? respawn
+    if (Math.hypot(player.position.x, player.position.z) > 118 || player.position.y < -20) {
+      player.position.set(0, 3, -8); vel.set(0, 0, 0); velY = 0;
+      toastZone('Back on the island — mind the edge!');
     }
-    if (state.char === 'human' && curAction) {
-      curAction.timeScale = moving ? (run ? 1.7 : 1.15) : 0.55;
-    }
-    if (state.char === 'carrot' && carrot) {
-      carrot.rotation.z = moving ? Math.sin(elapsed * 14) * 0.16 : 0;
-      carrot.position.y = moving ? Math.abs(Math.sin(elapsed * 7)) * 0.22 : 0;
-    }
-    // keep within world
-    var d = Math.hypot(player.position.x, player.position.z);
-    if (d > 116) { player.position.x *= 116 / d; player.position.z *= 116 / d; }
 
-    // coin pickups
+    // face movement direction (smooth shortest-arc)
+    if (planarSpeed > 0.6) {
+      var want = Math.atan2(vel.x, vel.z);
+      var diff = ((want - facing + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      facing += diff * Math.min(1, dt * 12);
+      player.rotation.y = facing;
+    }
+
+    // run dust
+    if (onGround && planarSpeed > 9 && Math.random() < dt * 14) dustPuff(player.position, 3);
+
+    // character animation
+    var speedNorm = Math.min(1.2, planarSpeed / 13);
+    if (state.char === 'human') {
+      animHuman(dt, speedNorm, !onGround, elapsed);
+    } else if (carrot) {
+      carrot.rotation.z = planarSpeed > 0.6 ? Math.sin(elapsed * 14) * 0.16 : 0;
+      carrot.position.y = planarSpeed > 0.6 ? Math.abs(Math.sin(elapsed * 7)) * 0.22 : 0;
+    }
+    // landing squash (applies to whichever character is visible)
+    squash = squash * (1 - Math.min(1, dt * 10));
+    var sy2 = 1 - squash;
+    player.scale.set(1 + (1 - sy2) * 0.6, sy2, 1 + (1 - sy2) * 0.6);
+
+    // coin pickups (magnet)
     for (var i = 0; i < COINS.length; i++) {
-      var c = COINS[i];
-      if (c.taken) continue;
-      c.mesh.rotation.y += dt * 3.2;
-      var dx2 = c.mesh.getWorldPosition(tmpV).x - player.position.x;
+      var cn = COINS[i];
+      if (cn.taken) continue;
+      cn.mesh.rotation.y += dt * 3.2;
+      cn.mesh.getWorldPosition(tmpV);
+      var dx2 = tmpV.x - player.position.x;
       var dz2 = tmpV.z - player.position.z;
       var dy2 = tmpV.y - (player.position.y + 0.9);
-      if (dx2 * dx2 + dz2 * dz2 + dy2 * dy2 < 1.9) {
-        c.taken = true; c.mesh.visible = false;
+      var d2 = dx2 * dx2 + dz2 * dz2 + dy2 * dy2;
+      if (d2 < 7 && onGround) { // magnet: drift toward player
+        cn.mesh.position.x += (player.position.x - tmpV.x) * dt * 3;
+        cn.mesh.position.z += (player.position.z - tmpV.z) * dt * 3;
+        cn.mesh.position.y += ((player.position.y + 0.9) - tmpV.y) * dt * 3;
+      }
+      if (d2 < 1.6) {
+        cn.taken = true; cn.mesh.visible = false;
         state.coins++;
         sfx('sfx_powerup.wav', 0.45);
         burst(tmpV.clone());
-        updateHud();
+        popCoins(); updateHud();
         if (state.coins === COINS.length) toastZone('ALL ' + state.coins + ' COLLECTED! You cleaned out the vault!');
       }
     }
   }
-  var tmpV = new THREE.Vector3();
 
-  // ---------- traffic + ambient ----------
+  // ---------- camera ----------
+  var camPos = new THREE.Vector3(0, 6, 6);
+  var lookAt = new THREE.Vector3();
+  function updateCamera(dt) {
+    // auto-align behind the character while moving (unless user dragged recently)
+    var moving = Math.hypot(vel.x, vel.z) > 1.5;
+    var sinceDrag = clock.elapsedTime - lastDragT;
+    if (moving && sinceDrag > 1.4) {
+      var want = facing + Math.PI; // camera behind facing dir
+      var diff = ((want - camYaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      camYaw += diff * Math.min(1, dt * 1.6);
+    }
+    camDistCur += (camDist - camDistCur) * Math.min(1, dt * 8);
+    var tx = player.position.x, ty = player.position.y + 1.7, tz = player.position.z;
+    var cx = tx + Math.sin(camYaw) * Math.cos(camPitch) * camDistCur;
+    var cz = tz + Math.cos(camYaw) * Math.cos(camPitch) * camDistCur;
+    var cy = ty + Math.sin(camPitch) * camDistCur;
+    if (cy < 0.6) cy = 0.6;
+    camPos.lerp(tmpV.set(cx, cy, cz), Math.min(1, dt * 9));
+    camera.position.copy(camPos);
+    lookAt.lerp(tmpV.set(tx, ty + 0.2, tz), Math.min(1, dt * 12));
+    camera.lookAt(lookAt);
+    // FOV kick while running
+    var wantFov = 58 + (Math.hypot(vel.x, vel.z) > 9 ? 6 : 0);
+    fovKick += (wantFov - fovKick) * Math.min(1, dt * 5);
+    camera.fov = fovKick; camera.updateProjectionMatrix();
+  }
+
+  // ---------- traffic ----------
   function moveCars(dt) {
     CARS.forEach(function (c) {
       c.t = (c.t + dt * c.speed * 0.1) % 1;
@@ -818,20 +1007,19 @@
       var nx = -Math.sin(a), nz = Math.cos(a);
       c.obj.position.set(x, 0.05, z);
       c.obj.rotation.y = Math.atan2(nx, nz);
-      var wobble = Math.sin(performance.now() * 0.004 + c.r) * 0.05;
-      c.obj.rotation.z = wobble;
+      c.obj.rotation.z = Math.sin(clock.elapsedTime * 0.004 + c.r) * 0.05;
     });
   }
 
-  // ---------- build + loop ----------
+  // ---------- build ----------
   var loadedSteps = 0, totalSteps = 5;
-  function step(n) { loadedSteps++; $('load-fill').style.width = Math.round((loadedSteps / totalSteps) * 100) + '%'; }
+  function stepDone() { loadedSteps++; $('load-fill').style.width = Math.round((loadedSteps / totalSteps) * 100) + '%'; }
 
-  buildPlaza(); step(1);
-  buildRidge(); step(2);
-  buildFarm(); step(3);
-  buildCars(); step(4);
-  buildFireflies(); buildPlayer(); step(5);
+  buildPlaza(); stepDone();
+  buildRidge(); stepDone();
+  buildFarm(); stepDone();
+  buildCars(); stepDone();
+  buildFireflies(); buildPlayer(); stepDone();
 
   applyMaterialMode();
   applyDayNight(state.dayT, 0);
@@ -840,43 +1028,42 @@
   setTimeout(function () {
     $('loading').classList.add('hide');
     setTimeout(function () { $('loading').style.display = 'none'; }, 600);
-    toastZone('Welcome to Vault Island — WASD to move, SPACE jump');
+    toastZone('Welcome to Vault Island — WASD move, SPACE jump, drag to look');
   }, 400);
 
+  // ---------- loop ----------
   var clock = new THREE.Clock();
   var fpsT = 0, frames = 0;
+  function tickParticles(sp, idx, dt, sparkle) {
+    sp.life -= dt * (sparkle ? 1.4 : 1.2);
+    var pos = sp.pts.geometry.attributes.position;
+    for (var v = 0; v < sp.vels.length; v++) {
+      sp.vels[v].y -= (sparkle ? 9 : 2.2) * dt;
+      pos.array[v * 3] += sp.vels[v].x * dt;
+      pos.array[v * 3 + 1] += sp.vels[v].y * dt;
+      pos.array[v * 3 + 2] += sp.vels[v].z * dt;
+    }
+    pos.needsUpdate = true;
+    sp.pts.material.opacity = Math.max(0, Math.min(1, sp.life));
+    if (sp.life <= 0) { scene.remove(sp.pts); (sparkle ? sparkles : puffs).splice(idx, 1); }
+  }
   function loop() {
     requestAnimationFrame(loop);
     var dt = Math.min(0.05, clock.getDelta());
     var elapsed = clock.elapsedTime;
 
     movePlayer(dt, elapsed);
-    if (mixer) mixer.update(dt);
     moveCars(dt);
 
-    // ambient anims
-    for (var i = 0; i < SPINNERS.length; i++) SPINNERS[i].obj.rotation.y += dt * SPINNERS[i].speed;
-    for (var j = 0; j < BOBBERS.length; j++) {
-      var b = BOBBERS[j];
+    var i;
+    for (i = 0; i < SPINNERS.length; i++) SPINNERS[i].obj.rotation.y += dt * SPINNERS[i].speed;
+    for (i = 0; i < BOBBERS.length; i++) {
+      var b = BOBBERS[i];
       if (b.scaleY) b.obj.scale.y = 1 + Math.sin(elapsed * 3 + b.phase) * 0.06;
       else b.obj.position.y += Math.sin(elapsed * 1.6 + b.phase) * b.amp * dt * 2;
     }
-    // sparkles
-    for (var s = sparkles.length - 1; s >= 0; s--) {
-      var sp = sparkles[s];
-      sp.life -= dt * 1.4;
-      var pos = sp.pts.geometry.attributes.position;
-      for (var v = 0; v < sp.vels.length; v++) {
-        sp.vels[v].y -= 9 * dt;
-        pos.array[v * 3] += sp.vels[v].x * dt;
-        pos.array[v * 3 + 1] += sp.vels[v].y * dt;
-        pos.array[v * 3 + 2] += sp.vels[v].z * dt;
-      }
-      pos.needsUpdate = true;
-      sp.pts.material.opacity = Math.max(0, sp.life);
-      if (sp.life <= 0) { scene.remove(sp.pts); sparkles.splice(s, 1); }
-    }
-    // fireflies drift
+    for (i = sparkles.length - 1; i >= 0; i--) tickParticles(sparkles[i], i, dt, true);
+    for (i = puffs.length - 1; i >= 0; i--) tickParticles(puffs[i], i, dt, false);
     if (FIREFLIES && FIREFLIES.material.opacity > 0.01) {
       var fp = FIREFLIES.geometry.attributes.position;
       var seeds = FIREFLIES.userData.seeds;
@@ -890,14 +1077,7 @@
     applyDayNight(state.dayT, elapsed);
     waterUniforms.time.value = elapsed;
     checkZone();
-
-    // camera follow
-    var px = player.position.x, py = player.position.y, pz = player.position.z;
-    var cx = px + Math.sin(camYaw) * Math.cos(camPitch) * camDist;
-    var cz = pz + Math.cos(camYaw) * Math.cos(camPitch) * camDist;
-    var cy = py + 2.2 + Math.sin(camPitch) * camDist;
-    camera.position.lerp(tmpV.set(cx, cy, cz), Math.min(1, dt * 7));
-    camera.lookAt(px, py + 1.4, pz);
+    updateCamera(dt);
 
     composer.render();
 
