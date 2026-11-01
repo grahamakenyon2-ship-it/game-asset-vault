@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Asset Vault 3D — Showcase World</title>
+<style>
+  :root { font-family: system-ui, sans-serif; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #101820; }
+  #c { display: block; width: 100%; height: 100%; }
+  .panel { position: absolute; background: rgba(12, 20, 30, 0.78); color: #eef4ff;
+    border: 1px solid rgba(120, 190, 255, 0.35); border-radius: 12px; padding: 10px 14px;
+    backdrop-filter: blur(6px); box-shadow: 0 6px 24px rgba(0,0,0,0.35); }
+  #hud-top { top: 14px; left: 14px; }
+  #hud-top h1 { font-size: 15px; letter-spacing: 1.5px; color: #ffd76a; text-transform: uppercase; }
+  #hud-top .sub { font-size: 11px; opacity: 0.8; margin-top: 3px; }
+  #hud-stats { top: 14px; right: 14px; font-size: 12px; line-height: 1.8; min-width: 200px; }
+  #hud-stats b { color: #ffd76a; }
+  #hud-controls { bottom: 14px; left: 14px; font-size: 11px; line-height: 1.9; }
+  #hud-controls kbd { background: #223; border: 1px solid #445; border-bottom-width: 2px;
+    border-radius: 4px; padding: 0 5px; font-family: monospace; color: #cfe3ff; }
+  #zone-toast { position: absolute; top: 72px; left: 50%; transform: translateX(-50%) translateY(-8px);
+    background: rgba(255, 215, 106, 0.92); color: #232; font-weight: 700; font-size: 14px;
+    padding: 8px 22px; border-radius: 999px; opacity: 0; transition: all 0.35s; pointer-events: none;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.3); max-width: 80vw; text-align: center; }
+  #zone-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  label.ctl { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  input[type=checkbox] { accent-color: #ffd76a; }
+  input[type=range] { width: 120px; accent-color: #ffd76a; }
+  #btn-music { background: #ffd76a; color: #232; border: 0; border-radius: 6px; padding: 3px 10px;
+    font-weight: 700; cursor: pointer; font-size: 11px; }
+  #loading { position: absolute; inset: 0; background: #101820; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px; transition: opacity 0.5s; z-index: 50; }
+  #loading.hide { opacity: 0; }
+  #load-fill { height: 100%; width: 0; background: #ffd76a; border-radius: 4px; transition: width 0.15s; }
+  #loading .bar { width: 220px; height: 8px; background: #223; border-radius: 4px; overflow: hidden; }
+  #loading .t { color: #cfe3ff; font-size: 13px; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="loading"><div class="t">ASSET VAULT 3D</div><div class="bar"><div id="load-fill"></div></div></div>
+
+<div id="hud-top" class="panel">
+  <h1>Asset Vault 3D — Showcase World</h1>
+  <div class="sub">Toon Plaza · Jump Ridge · Carrot Farms — every 3D pack, one island</div>
+</div>
+
+<div id="hud-stats" class="panel">
+  <div>Coins: <b id="hud-coins">0</b></div>
+  <div><span id="hud-mode">TOON shading</span> <kbd style="background:#223;border:1px solid #445;border-radius:3px;padding:0 4px;">T</span></div>
+  <div>Bloom <b id="hud-bloom">ON</b> <kbd style="background:#223;border:1px solid #445;border-radius:3px;padding:0 4px;">B</kbd></div>
+  <div>Music <button id="btn-music">M</button> <b id="hud-music">OFF</b></div>
+  <label class="ctl"><input type="checkbox" id="chk-toon" checked /> Toon shading (T)</label>
+  <label class="ctl"><input type="checkbox" id="chk-bloom" checked /> Bloom (B)</label>
+  <label class="ctl">Day/Night <input type="range" id="rng-day" min="0" max="1" step="0.002" value="0.32" /></label>
+  <div style="opacity:.7; margin-top:2px;"><span id="hud-fps">-- fps</span></div>
+</div>
+
+<div id="hud-controls" class="panel">
+  <div><kbd>W A S D</kbd> move · <kbd>Shift</kbd> run · <kbd>Space</kbd> jump</div>
+  <div><kbd>Mouse drag</kbd> orbit · <kbd>Wheel</kbd> zoom · <kbd>C</kbd> swap character · <kbd>M</kbd> music</div>
+</div>
+
+<div id="zone-toast"></div>
+
+<!--LIBS-->
+<!--ASSETS-->
+<!--MAIN-->
+</body>
+</html>
