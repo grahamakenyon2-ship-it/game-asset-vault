@@ -51,3 +51,18 @@ Legend: ✅ commercial-clear · ⚠️ verify before shipping · ✅ commercial-
 |---|---|---|---|---|---|
 | items (Items pack x16, 1244 icons) | Glionox — glionox.itch.io/items16 | **RESOLVED: ”Use as you want in free and commercial projects, modify any part, credits highly appreciated, no redistribute/resell”** (itch page, verified Nov 2 2026) | appreciated → give it | ✅ **GREEN** | resolves the long-standing ⚠️ above; best icon pool in the vault |
 | Simple Game UI Pack #3 | Kraupin — kraupin.itch.io/simple-game-ui-pack-3 | **CC0** per itch ”Asset license” field (verified Nov 2 2026); ⚠️ Figma community mirror shows CC BY 4.0 — credit ”Kraupin” to be safe | give it | ✅ GREEN w/ credit | 72 flat gradient buttons, PNG+SVG+.fig — vector lane, prototype-only for pixel games |
+
+## GAP-FILL ADDITIONS — Nov 2 2026 (see VAULT-GAP-FILL.md for URLs)
+
+| Asset | Creator / Source | License | Attribution | Commercial verdict | Notes |
+|---|---|---|---|---|---|
+| Fonts: Press Start 2P, Silkscreen, VT323, Pixelify Sans | Google Fonts (github.com/google/fonts) | SIL OFL 1.1 | license file inclusion required per OFL | ✅ | fills the font gap |
+| Kevin MacLeod music (10 séance/ambient tracks) | incompetech.com | CC BY 4.0 | REQUIRED: ”Kevin MacLeod (incompetech.com)” | ✅ with credit | Ossuary 1/4/5, Peaceful Desolation, Long Note One, Anguish, Relaxing Piano Music, Sardana, Deep Haze, Frost Waltz |
+| Juhani Junkala 5 Chiptunes Action + 4 Chiptunes Adventure | OpenGameArt (SubspaceAudio) | CC0 | none | ✅ | loop-ready; INFO.txt restates CC0 |
+| 512 Retro SFX (8-bit style) | Juhani Junkala — OGA | CC0 | none | ✅ | biggest SFX set in vault |
+| 51 UI SFX (buttons/switches/clicks) | OGA | CC0 | none | ✅ | UI click library |
+| Pixel Art Spells | DevWizard — OGA | CC0 | credit appreciated | ✅ | includes B&W assets designed for engine tinting — echo-tint friendly |
+| Gothicvania Magic Pack 9 | ansimuz — OGA | CC0 | credit appreciated | ✅ | 4 spells, 64px |
+| Free VFX Pack (22 effects) | CodeManu — OGA | CC0 (page: public domain) | none | ✅ | SpriteMancer sources, 30+60fps |
+| Spell Animations + Godot project | Viktor Hahn — OGA | CC BY 4.0 | REQUIRED: ”Viktor Hahn” | ✅ with credit | hi-res sheets, ready Godot project |
+| ghost-kit (echo_tint.gdshader, grid indicators) | authored in-house Nov 2 2026 | **CC0** (own work) | none | ✅ | signature echo-tint + dissolve-death + grid overlays |
