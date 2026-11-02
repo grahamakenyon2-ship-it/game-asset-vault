@@ -1,4 +1,4 @@
-"# ASSET APPLICATION MAP — Where Every Pack Gets Used
+# ASSET APPLICATION MAP — Where Every Pack Gets Used
 (Oct 30, 2026 · companion to SCAN-NOTES.md · doctrine source: THE MEGABIBLE)
 
 ## Doctrine filters (apply before ANY use)
@@ -19,7 +19,7 @@
 | Everything else | **Do not paste into BB.** BB's hand-coded cozy vector style is its identity; pixel assets would break cohesion | — |
 
 ## GAME #2 CANDIDATES (post-BB, ranked by art-readiness)
-### A. \"Sunnyside Farm\" — cozy farm idle (strongest play)
+### A. ”Sunnyside Farm” — cozy farm idle (strongest play)
 - **Sunnyside World (✅ cleared, no credit needed):** ~70% of a farm game's art — humans/goblins × 7 hairstyles × 16 actions (idle/walk/run/roll/jump/hurt/death/carry/attack/swim/chop/mine/build/fish), **11 crops × 5 growth stages** (the exact crop-progression backbone an idle farm needs), animals, plants, buildings/interiors/land tileset (16px), 9-slice UI, VFX, emotes.
 - Companions (same bright cute-pixel lane, adjacent scales): **MegaPackFree** animals + PastelUI (CC0) for variety/accents; **Maeve Farm RPG** 16x16 tiles/animals (⚠️ verify first) for filler props.
 - Fit: the idle bible's farm-sim archetype (Monkey Mart/Forager lineage) with near-zero art cost. CrazyGames target (pixel lane).
@@ -29,13 +29,13 @@
 - Fit: megabible says bright colorful 2D > all on Poki — this is the only pack in the vault that IS that lane natively.
 ### C. Tiny Swords micro-RTS (CrazyGames)
 - **Tiny Swords (✅ cleared, no credit):** 6 faction colors of units (warrior/lancer/archer/monk/pawn), buildings, terrain, UI, particles, Aseprite sources (re-editable).
-- Fit: short-session \"tiny war\" arcade strategy; the idle bible's collection/completion loops map onto unit unlocks. Aseprite sources = we can recolor/extend.
+- Fit: short-session ”tiny war” arcade strategy; the idle bible's collection/completion loops map onto unit unlocks. Aseprite sources = we can recolor/extend.
 
 ## GAME #3+ / PROTOTYPE BIN
 - **Dungeon crawler / micro-roguelite:** Pixel Crawler (modular 4-dir chars, ✅) + Free Dungeon Explorer (tilemap/enemies/battlers/item icons/128px UI + bundled SFX, ✅ credit required) + Legacy-Fantasy High Forest (Anokolisa forest env, ✅). All retro pixel, mutually compatible scale language — one coherent dungeon aesthetic from three packs.
 - **Cat café idle:** MegaPackFree cats (Mochi/Pochi/sleeping cat/cat room/cat UI, CC0) — small niche title, fast to build, cozy branding.
 - **Merge / inventory-management:** Cozy UI inventory + item slots + checkboxes (✅ demo subset, upgradeable) + Glionox 1,244 16x16 item icons (⚠️ the one unresolved license — if it clears, this is the merge-genre backbone; if not, substitute MegaPack environment items).
-- **Any management/idle game, any time:** Mucho Pixels character animations (✅ essentially) — pickup/attack/carry/walk actions × male/female × 3 chars × clothing states at 64px flat. The \"worker doing a job\" animation library for every future idle title; mixes cleanly with vector UI.
+- **Any management/idle game, any time:** Mucho Pixels character animations (✅ essentially) — pickup/attack/carry/walk actions × male/female × 3 chars × clothing states at 64px flat. The ”worker doing a job” animation library for every future idle title; mixes cleanly with vector UI.
 
 ## OTHER PROJECTS (honest verdicts)
 - **CYF (Choose Your Fate):** N/A — CYF has its own portrait vault + card aesthetic; pixel icons would clash. Don't force it.
@@ -68,4 +68,3 @@
 - **Excluded:** Sprout Lands + Tiny Wonder Farm (red, non-commercial), MegaPack/mp_char/Farm RPG/Bayat (lane mismatch), all 3D packs (ElectricFX kept as spectral-shader REFERENCE only).
 - **GAPS (must source externally/custom): 1) music — zero in vault; 2) fonts — zero; 3) grid move/target indicators — custom quads + Tiny Swords cursors; 4) spectral/echo VFX — custom Godot shader (signature look, worth the effort); 5) death anims at Tiny Swords scale (shader dissolve).**
 - **Scale rule enforced: DE 24px ≠ Tiny Swords 192px ≠ PC/Legacy 64px — never mix lanes in one scene.**
-"
