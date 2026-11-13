@@ -1,5 +1,1 @@
 
-
-### ADDENDUM Nov 13 2026 (Jake's placeholder portraits + Serge Quadrado music)
-- **Officer portraits (PLACEHOLDERS):** kongming.net/11/portraits/ — full ROTK XI portrait collection, A-Z pages, 256x256 px each, with stats/bios. Use as named-officer placeholders. LICENSE POLICY: Koei Tecmo game art = internal prototyping ONLY; never ship in any public/exported build; keep in a clearly-marked placeholders/ dir with source attribution; replace before release (PD woodblock direction is the shippable alternative).
-- **Music: Serge Quadrado library added Nov 13 2026** (~45 tracks, loops + full pieces, mp3, loose in repo root + packs/). Attribution: all tracks by Serge Quadrado, open-source/free per Alex. Fills the game-BGM gap (menu/battle/ambient loops ready: e.g. "Intrigue", "Dungeon", "Invasion", "Menu Music", "Stone Workshop"). NOTE: still not Chinese-idiom (no guzheng/erhu) — Quadrado carries prototype and likely much of the game; Chinese-instrument tracks remain a nice-to-have, not a blocker.
